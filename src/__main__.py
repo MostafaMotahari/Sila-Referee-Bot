@@ -1,3 +1,4 @@
+import os
 from pyrogram.client import Client
 from configparser import ConfigParser
 
@@ -8,6 +9,8 @@ config.read('src/config.ini')
 TOKEN = config['ACCOUNT']['TOKEN']
 API_ID = config['ACCOUNT']['API_ID']
 API_HASH = config['ACCOUNT']['API_HASH']
+API_URL = config['API']['URL']
+DB_URL = config['SQL']['HOST']
 PLUGINS = dict(root='src/plugins')
 
 app = Client(
@@ -19,4 +22,6 @@ app = Client(
 )
 
 if __name__ == "__main__":
+    os.environ['db_url'] = DB_URL
+    os.environ['api_url'] = API_URL
     app.run()
