@@ -1,6 +1,8 @@
 import os
 from pyrogram.client import Client
 from configparser import ConfigParser
+from src.sql.base_class import Base
+from src.sql.session import engine
 
 # Load details from config file with configparser
 config = ConfigParser()
@@ -22,6 +24,10 @@ app = Client(
 )
 
 if __name__ == "__main__":
+    # Set environment variable
     os.environ['db_url'] = DB_URL
     os.environ['api_url'] = API_URL
+    # Connect to data base
+    Base.metadata.create_all(bind=engine)
+
     app.run()
