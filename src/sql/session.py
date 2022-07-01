@@ -1,10 +1,12 @@
-from typing import Generator
 import os
+from typing import Generator
+
+from decouple import config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-SQLALCHEMY_DATABASE_URL = os.environ.get("db_url")
+SQLALCHEMY_DATABASE_URL = config('DB_URL')
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 local_session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

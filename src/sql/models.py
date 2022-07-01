@@ -1,9 +1,9 @@
-from operator import index
 from sqlalchemy import (
     Column,
     ForeignKey,
     Integer,
     String,
+    Date,
 )
 from sqlalchemy.types import DateTime
 from sqlalchemy.orm import relationship
@@ -25,20 +25,29 @@ class MatchImage(Base):
     __tablename__ = "match_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    match_id = Column(Integer, ForeignKey("matches.id"))
     image_url = Column(String, unique=True, index=True)
     image_name = Column(String, unique=True, index=True)
     image_type = Column(String)
+    match_id = Column(Integer, ForeignKey("matches.id"))
 
 
 class MatchModel(Base):
     __tablename__ = "matches"
 
     id = Column(Integer, primary_key=True, index=True)
-    match_images = relationship("MatchImage", backref="match")
     referee = Column(Integer, index=True)
     league = Column(Integer, index=True, nullable=True)
-    home_team = Column(Integer, index=True)
-    away_team = Column(Integer, index=True)
-    tournament = Column(Integer, index=True, nullable=True)
-    starts_at = DateTime(index=True)
+    home_team = Column(Integer)
+    away_team = Column(Integer)
+    tournament = Column(Integer, nullable=True)
+    starts_at = Column(Date, index=True)
+    match_day_id = Column(Integer, ForeignKey("days.id"))
+    match_images = relationship("MatchImage", backref="match")
+
+
+class MatchDayModel(Base):
+    __tablename__ = "days"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, index=True)
+    match_objects = relationship("MatchModel", backref="match_day")
