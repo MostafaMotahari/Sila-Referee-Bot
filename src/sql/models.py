@@ -28,7 +28,7 @@ class MatchImage(Base):
     image_url = Column(String, unique=True, index=True)
     image_name = Column(String, unique=True, index=True)
     image_type = Column(String)
-    match_id = Column(Integer, ForeignKey("matches.id"))
+    match_id = Column(Integer, ForeignKey("matches.id", ondelete='CASCADE'))
 
 
 class MatchModel(Base):
@@ -41,8 +41,8 @@ class MatchModel(Base):
     away_team = Column(Integer)
     tournament = Column(Integer, nullable=True)
     starts_at = Column(Date, index=True)
-    match_day_id = Column(Integer, ForeignKey("days.id"))
-    match_images = relationship("MatchImage", backref="match")
+    match_day_id = Column(Integer, ForeignKey("days.id", ondelete='CASCADE'))
+    match_images = relationship("MatchImage", backref="match", passive_deletes=True)
 
 
 class MatchDayModel(Base):
@@ -50,4 +50,4 @@ class MatchDayModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     date = Column(Date, index=True)
-    match_objects = relationship("MatchModel", backref="match_day")
+    match_objects = relationship("MatchModel", backref="match_day", passive_deletes=True)

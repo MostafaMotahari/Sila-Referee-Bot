@@ -4,6 +4,6 @@ from pyrogram.types import Message
 from src.plugins.get_matches import check_matches_available
 
 @Client.on_message(filters.regex("^/get_m") & filters.private)
-async def get_matches(client: Client, message: Message):
-    msg = await message.reply_text("Checking for new matches...")
+def get_matches(client: Client, message: Message):
+    msg = message.reply_text("Checking for new matches...")
     check_matches_available(client)
