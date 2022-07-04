@@ -1,12 +1,13 @@
 """This plugin get matches DAILY from api and save them to database"""
 
+from email import message
 import json
 import requests
 
 from datetime import datetime
 from decouple import config
-from pyrogram.client import Client
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from pyrogram.types import Message
+from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from sqlalchemy import exists
 
@@ -26,7 +27,7 @@ def check_match_exist(db_session: Session, match_id):
 
 
 # Check if matches are available
-def check_matches_available(bot_client: Client):
+def check_matches_available(message: Message):
     """Check if matches are available"""
 
     headers = {'Authorization': f'Token {api_token}'}
@@ -37,20 +38,26 @@ def check_matches_available(bot_client: Client):
     if response.status_code == 200:
         matches = json.loads(response.text)
 
-        match_day = db_session.query(MatchDayModel).filter(MatchDayModel.date == datetime.now().date().strftime("%Y-%m-%d")).first()
-
-        if not match_day:
+        if not db_session.query(exists().where(MatchDayModel.date == datetime.now().date().strftime("%Y-%m-%d"))).scalar():
             match_day = MatchDayModel(date=datetime.now().date().strftime("%Y-%m-%d"))
             db_session.add(match_day)
             db_session.commit()
             db_session.refresh(match_day)
-            match_day = db_session.query(MatchDayModel).filter(MatchDayModel.date == datetime.now().date().strftime("%Y-%m-%d")).first()
 
+        match_day = db_session.query(MatchDayModel).filter(MatchDayModel.date == datetime.now().date().strftime("%Y-%m-%d")).first()
+
+
+        new_match_detected = False
         for match in matches:
             if not check_match_exist(db_session, match['id']):
                 match_day = save_new_matches(db_session, match, match_day)
+                new_match_detected = True
+        else:
+            if new_match_detected:
+                confirm_matches.send_confirm_matches(message, match_day.id)
 
-        confirm_matches.send_confirm_matches(bot_client, match_day.id)
+            else:
+                message.edit("♻️ No matches avalable.")
 
 
 # Get match images from api
@@ -105,6 +112,7 @@ def cancel_matches(match_day_id: int):
     db_session.query(MatchDayModel).filter(MatchDayModel.id == match_day_id).delete()
     db_session.commit()
 
-# scheduler = AsyncIOScheduler()
-# scheduler.add_job(get_matches, 'interval', days=1)
+# Set an scheduler for checking new mathches
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(check_matches_available, 'interval', days=1, args=(__main__.app, ))
 # scheduler.start()

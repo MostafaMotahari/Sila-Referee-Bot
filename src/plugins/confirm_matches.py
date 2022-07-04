@@ -1,5 +1,6 @@
 """This files contains the code for the confirm matches plugin"""
 
+from http import client
 from pyrogram.client import Client
 from pyrogram import filters
 from pyrogram.types import Message, CallbackQuery
@@ -12,12 +13,20 @@ from src.plugins import get_matches
 owner_id = config("OWNER_ID")
 
 
-def send_confirm_matches(client: Client, match_day_id: str):
+@Client.on_message(filters.user(owner_id) & filters.regex("^/get_matches$") & filters.private)
+def get_matches_from_website(client: Client, message: Message):
+    msg = client.send_message(
+        owner_id,
+        "Checking for new matches..."
+    )
+    get_matches.check_matches_available(msg)
+
+
+def send_confirm_matches(message: Message, match_day_id: str):
     """Send confirm matches message to owner"""
 
-    client.send_message(
-        owner_id,
-        "New mathces are available. Do you want to confirm them?",
+    message.edit(
+        "📥 New mathces are available. Do you want to confirm them?",
         reply_markup=InlineKeyboardMarkup(
             [
                 [InlineKeyboardButton("Yes, sure!", callback_data="confirm_matches:confirmed")],
@@ -30,11 +39,11 @@ def send_confirm_matches(client: Client, match_day_id: str):
 @Client.on_callback_query(filters.regex("^confirm_matches:confirmed$"))
 def confirm_matches(client: Client, callback_query: CallbackQuery):
 
-    callback_query.edit_message_text("Matches has been confirmed!")
+    callback_query.edit_message_text("✅ Matches has been confirmed!")
 
 
 @Client.on_callback_query(filters.regex("^cancel_matches:\d+$"))
 def confirm_matches(client: Client, callback_query: CallbackQuery):
 
-    callback_query.edit_message_text("Matches has been canceled!")
+    callback_query.edit_message_text("❌ Matches has been canceled!")
     get_matches.cancel_matches( int(callback_query.data.split(":")[-1]) )
