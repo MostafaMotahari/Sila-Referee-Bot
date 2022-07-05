@@ -8,6 +8,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from decouple import config
 
 from src.plugins import get_matches
+from plugins.schedule_matchday import matchday_scheduler
 
 # Load static variables
 owner_id = config("OWNER_ID")
@@ -29,21 +30,24 @@ def send_confirm_matches(message: Message, match_day_id: str):
         "📥 New mathces are available. Do you want to confirm them?",
         reply_markup=InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("Yes, sure!", callback_data="confirm_matches:confirmed")],
+                [InlineKeyboardButton("Yes, sure!", callback_data="confirm_matches:" + str(match_day_id))],
                 [InlineKeyboardButton("Hell no!", callback_data="cancel_matches:" + str(match_day_id))]
             ]
         )
     )
 
 
-@Client.on_callback_query(filters.regex("^confirm_matches:confirmed$"))
-def confirm_matches(client: Client, callback_query: CallbackQuery):
-
-    callback_query.edit_message_text("✅ Matches has been confirmed!")
-
-
 @Client.on_callback_query(filters.regex("^cancel_matches:\d+$"))
+def cancel_matches(client: Client, callback_query: CallbackQuery):
+
+    match_day_id = int(callback_query.data.split(":")[-1])
+    callback_query.edit_message_text("❌ Matches has been canceled!")
+    get_matches.cancel_matches( match_day_id )
+
+
+@Client.on_callback_query(filters.regex("^confirm_matches:\d+$"))
 def confirm_matches(client: Client, callback_query: CallbackQuery):
 
-    callback_query.edit_message_text("❌ Matches has been canceled!")
-    get_matches.cancel_matches( int(callback_query.data.split(":")[-1]) )
+    match_day_id = int(callback_query.data.split(":")[-1])
+    matchday_scheduler(client, callback_query, match_day_id)
+    callback_query.edit_message_text("✅ Matches has been confirmed!")
