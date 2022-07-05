@@ -31,7 +31,7 @@ def check_matches_available(message: Message):
     """Check if matches are available"""
 
     headers = {'Authorization': f'Token {api_token}'}
-    response = requests.get(f'{api_url}/matches/', headers=headers)
+    response = requests.get(f'{api_url}/matches/?starts_at_ed={datetime.now().date().strftime("%Y-%m-%d")}', headers=headers)
     db_session = get_db().__next__()
 
     
