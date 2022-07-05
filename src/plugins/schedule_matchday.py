@@ -2,19 +2,37 @@
 
 from datetime import datetime, timedelta
 from dateutil import tz
+import json
 
 from decouple import config
 from pyrogram.client import Client
 from pyrogram.types import Message
 import requests
-import json
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.executors.pool import ThreadPoolExecutor
+from pytz import utc
 
 from src.sql.models import MatchDayModel, MatchModel
 from src.sql.session import get_db
 from src.plugins import message_templates
+from src.plugins.refereeing_matches import schedule_referee
 
+# Env variables
 api_url = config("API_URL")
 api_token = config("API_TOKEN")
+jobstores = {
+    'default': SQLAlchemyJobStore(url=config('DB_URL'))
+}
+executors = {
+    'default': ThreadPoolExecutor(20),
+}
+job_defaults = {
+    'coalesce': False,
+    'max_instances': 3,
+    'misfire_grace_time': 15*60
+}
+scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc)
 
 # Scheduler
 def matchday_scheduler(client: Client, message: Message, match_day_id: int):
@@ -46,3 +64,7 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
             except Exception as e:
                 print(e)
                 continue
+
+            scheduler.add_job(schedule_referee, run_date=local_match_time)
+
+        scheduler.start()
