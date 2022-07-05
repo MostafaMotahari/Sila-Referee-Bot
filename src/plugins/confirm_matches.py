@@ -1,6 +1,5 @@
 """This files contains the code for the confirm matches plugin"""
 
-from http import client
 from pyrogram.client import Client
 from pyrogram import filters
 from pyrogram.types import Message, CallbackQuery
@@ -8,16 +7,15 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from decouple import config
 
 from src.plugins import get_matches
-from plugins.schedule_matchday import matchday_scheduler
+from src.plugins.schedule_matchday import matchday_scheduler
 
 # Load static variables
 owner_id = config("OWNER_ID")
 
-
-@Client.on_message(filters.user(owner_id) & filters.regex("^/get_matches$") & filters.private)
+@Client.on_message(filters.regex("^/get_matches$") & filters.user("TheAlternativeMousiol") & filters.private)
 def get_matches_from_website(client: Client, message: Message):
     msg = client.send_message(
-        owner_id,
+        "TheAlternativeMousiol",
         "Checking for new matches..."
     )
     get_matches.check_matches_available(msg)
