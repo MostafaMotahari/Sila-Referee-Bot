@@ -21,6 +21,7 @@ from src.plugins.refereeing_matches import schedule_referee
 # Env variables
 api_url = config("API_URL")
 api_token = config("API_TOKEN")
+
 jobstores = {
     'default': SQLAlchemyJobStore(url=config('DB_URL'))
 }
@@ -45,13 +46,19 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
     # Schedule send stadium link to players
     for match in match_day.match_objects:
         # Change time of match to local time server
-        local_match_time = datetime.fromisoformat(match.starts_at).astimezone(tz.tzlocal()) #.strftime('%Y-%m-%d %H:%M:%S')
+        your_country_time = json.loads(requests.get("http://worldtimeapi.org/api/timezone/" + config("TIME_ZONE")).text)
+        your_country_time = datetime.strptime(your_country_time["datetime"].split("T")[0] + " " \
+            + your_country_time["datetime"].split("T")[1].split(".")[0], '%Y-%m-%d %H:%M:%S') # Edit here later
 
-        home_team_json = json.loads(requests.get(f'{api_url}/teams/{match.home_team}', headers=headers))
-        away_team_json = json.loads(requests.get(f'{api_url}/teams/{match.away_team}', headers=headers))
+        # Skip expired matches
+        if your_country_time > match.starts_at:
+            continue
+
+        home_team_json = json.loads(requests.get(f'{api_url}/teams/{match.home_team}', headers=headers).text)
+        away_team_json = json.loads(requests.get(f'{api_url}/teams/{match.away_team}', headers=headers).text)
 
         stadium = home_team_json["stadium"]
-        stadium_link = client.get_chat(stadium["telegram_chat_id"]).invite_link
+        stadium_link = client.get_chat(int(stadium["telegram_chat_id"])).invite_link
 
         # Schedule linking
         for player in home_team_json["players"] + away_team_json["players"]:
@@ -59,12 +66,13 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
                 client.send_message(
                     chat_id = player["user_telegram_id"],
                     text = message_templates.linking_message_template.format( match.starts_at, stadium_link ),
-                    schedule_date = local_match_time - timedelta(hours=0, minutes=20)
+                    # schedule_date = local_match_time - timedelta(hours=0, minutes=20)
                 )
             except Exception as e:
                 print(e)
                 continue
 
-            scheduler.add_job(schedule_referee, run_date=local_match_time)
-
-        scheduler.start()
+        # scheduler.add_job(schedule_referee, run_date=match.starts_at, replace_existing=True, args=(match, ))
+        schedule_referee(match, int(stadium["telegram_chat_id"]), home_team_json, away_team_json)
+        
+    # scheduler.start()

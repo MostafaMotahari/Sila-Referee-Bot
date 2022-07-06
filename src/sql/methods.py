@@ -13,18 +13,7 @@ def test():
     db.add(user)
     db.commit()
     db.refresh(user)
-
-    image = MatchImage(
-        image_url="sdfsdfdds",
-        image_name="sdfsdfds",
-        image_type="sdfsdfds",
-        match_id=0,
-    )
-
-    db.add(image)
-    db.commit()
-    db.refresh(image)
-
+    
     match = MatchModel(
         referee=1,
         league=1,
@@ -33,6 +22,17 @@ def test():
     db.add(match)
     db.commit()
     db.refresh(match)
+
+    image = MatchImage(
+        image_url="sdfsdfdds",
+        image_name="sdfsdfds",
+        image_type="sdfsdfds",
+    )
+
+    db.add(image)
+    db.commit()
+    db.refresh(image)
+
 
     match_day = MatchDayModel()
 
