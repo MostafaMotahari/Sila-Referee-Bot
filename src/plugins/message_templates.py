@@ -11,5 +11,11 @@ Go and fuck the the opponent 🔥
 """
 
 score_board_message_template = """
+🏠 {}
+✈️ {}
 
+🏟 {}
+
+⏰ {}
+🎤 {}
 """

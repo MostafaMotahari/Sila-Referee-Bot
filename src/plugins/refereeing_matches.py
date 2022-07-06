@@ -6,12 +6,18 @@ from pyrogram import filters
 from pyrogram.client import Client
 from pyrogram.types import Message
 from decouple import config
+import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from src.plugins import message_templates
 from src.sql.models import MatchModel
+from src.plugins import goal_checker
 
 
 # Seprate session for scheduled tasks
+# Env variables
+api_url = config("API_URL")
+api_token = config("API_TOKEN")
 
 app = Client(
     "SilaScheduleBot",
@@ -22,43 +28,63 @@ app = Client(
 
 temp_memory = {
     "score_board_id": None,
+    "picture": {
+        "id": None,
+        "type": None,
+        "name": None,
+        "number": 0
+    }
 }
 
+schedular = BackgroundScheduler()
 
-def schedule_referee(match: MatchModel, stadium_id: str):
 
-    # Send picture function
-    def send_image_match(number_of_picture: int):
-        app.send_message(stadium_id, "1️⃣")
-        time.sleep(1)
-        app.send_message(stadium_id, "2️⃣")
-        time.sleep(1)
-        app.send_message(stadium_id, "3️⃣")
-        time.sleep(1)
+# Send picture function
+def send_image_match(match: MatchModel, stadium_id, number_of_picture: int):
+    app.send_message(stadium_id, "1️⃣")
+    time.sleep(1)
+    app.send_message(stadium_id, "2️⃣")
+    time.sleep(1)
+    app.send_message(stadium_id, "3️⃣")
+    time.sleep(1)
 
-        return app.send_photo(
-                stadium_id,
-                match.match_images[0].image_url,
-            )
+    return app.send_photo(
+            stadium_id,
+            "https://upload.wikimedia.org/wikipedia/commons/0/0e/Argentina_team_in_St._Petersburg_%28cropped%29_Messi.jpg?20180730083645",
+        )
+
+
+def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_team: dict):
+
+    os.environ["memory"] = json.dumps({})
+    
+    app.start()
+    # Send scoreboard
+    headers = {'Authorization': f'Token {api_token}'}
+    referee = json.loads(requests.get(f'{api_url}/users/{match.referee}', headers=headers).text)
 
 
     score_board_msg = app.send_message(
         stadium_id,
-        message_templates.score_board_message_template
+        message_templates.score_board_message_template.format(
+            home_team["name"],
+            away_team["name"],
+            home_team["stadium"]["name"],
+            match.starts_at,
+            referee["username"]
+        )
     )
 
-    temp_memory["score_board_id"] = score_board_msg.message_id
+    # Save the information of message to temp memory
+    temp_memory["score_board_id"] = score_board_msg.id
     temp_memory["stadium_id"] = stadium_id
 
     time.sleep(60)
 
-    # picture_one = wget.download(url=match.match_images[0].image_url, out=config("DOWNLOAD_DIR"))
-    
-
-    picture_one = send_image_match(0)
+    picture_one = send_image_match(match, stadium_id, 0)
 
     temp_memory["picture"] = {
-        "id": picture_one.message_id,
+        "id": picture_one.id,
         "type": match.match_images[0].image_type,
         "name": match.match_images[0].image_name,
         "number": 0
@@ -67,37 +93,9 @@ def schedule_referee(match: MatchModel, stadium_id: str):
     os.environ["memory"] = json.dumps(temp_memory)
 
     # Start time controler
-    max_time = 30
-
-    for i in max_time:
-        time.sleep(1)
-        secondary_temp_memory = json.loads(os.environ["memory"])
-
-        if temp_memory["picture"]["id"] == secondary_temp_memory["picture"]["id"]:
-            if max_time == 0:
-                # Set things about the nex picture
-                next_image_number = temp_memory["picture"]["number"] + 1
-                next_image_type = match.match_images[ temp_memory["picture"]["number"] + 1 ].image_type
-
-                # Send the next picture
-                sent_pic = send_image_match(next_image_number)
-
-                # Save the picture in memory
-                temp_memory["picture"] = {
-                    "id": sent_pic.message_id,
-                    "type": match.match_images[next_image_number].image_type,
-                    "name": match.match_images[next_image_number].image_name,
-                    "number": next_image_number
-                }
-
-                os.environ["memory"] = json.dumps(temp_memory)
-
-                # Set max time for the next picture
-                max_time = 30 if next_image_type == "speed" else 45 if next_image_type == "info" else 60
-
-            else:
-                max_time -= 1
-
+    schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
+    schedular.start()
+    
 
 # Goal detector
 @app.on_message(filters.group & filters.create(
