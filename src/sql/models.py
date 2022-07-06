@@ -4,6 +4,7 @@ from sqlalchemy import (
     Integer,
     String,
     Date,
+    DateTime
 )
 from sqlalchemy.types import DateTime
 from sqlalchemy.orm import relationship
@@ -40,7 +41,7 @@ class MatchModel(Base):
     home_team = Column(Integer)
     away_team = Column(Integer)
     tournament = Column(Integer, nullable=True)
-    starts_at = Column(Date, index=True)
+    starts_at = Column(DateTime, index=True)
     match_day_id = Column(Integer, ForeignKey("days.id", ondelete='CASCADE'))
     match_images = relationship("MatchImage", backref="match", passive_deletes=True)
 
