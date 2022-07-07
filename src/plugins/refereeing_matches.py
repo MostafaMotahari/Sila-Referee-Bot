@@ -1,17 +1,18 @@
 import os
 import time
 import json
+import requests
 
 from pyrogram import filters
 from pyrogram.client import Client
 from pyrogram.types import Message
 from decouple import config
-import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from src.plugins import message_templates
-from src.sql.models import MatchModel
 from src.plugins import goal_checker
+from src.plugins import custom_filters
+from src.sql.models import MatchModel
 from src.sql.session import get_db
 
 
@@ -114,11 +115,7 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     
 
 # Goal detector
-@app.on_message(filters.group & filters.create(
-    lambda _, __, msg : True if msg.text == json.loads(os.environ["memory"])["picture"]["name"] else False
-) & filters.create(
-    lambda _, __, msg : True if msg.chat.id == json.loads(os.environ["memory"])["stadium_id"] else False
-))
+@app.on_message(custom_filters.goal_validator & custom_filters.stadium_confirm)
 def goal_detector(client: Client, message: Message):
     temp_memory = json.loads(os.environ["memory"])
 
