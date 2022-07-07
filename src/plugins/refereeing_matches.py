@@ -50,13 +50,13 @@ def send_image_match(match: MatchModel, stadium_id, number_of_picture: int):
 
     return app.send_photo(
             stadium_id,
-            "https://upload.wikimedia.org/wikipedia/commons/0/0e/Argentina_team_in_St._Petersburg_%28cropped%29_Messi.jpg?20180730083645",
+            match.match_images[number_of_picture].image_url,
         )
 
 
 def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_team: dict):
 
-    os.environ["memory"] = json.dumps({})
+    os.environ["memory"] = json.dumps(temp_memory)
     
     app.start()
     # Send scoreboard
@@ -86,15 +86,15 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     temp_memory["picture"] = {
         "id": picture_one.id,
         "type": match.match_images[0].image_type,
-        "name": match.match_images[0].image_name,
+        "name": match.match_images[0].image_name.decode('utf-8'),
         "number": 0
     }
 
     os.environ["memory"] = json.dumps(temp_memory)
 
     # Start time controler
-    schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
-    schedular.start()
+    # schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
+    # schedular.start()
     
 
 # Goal detector
