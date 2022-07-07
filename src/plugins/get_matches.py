@@ -39,7 +39,7 @@ def check_matches_available(message: Message):
         matches = json.loads(response.text)
 
         if not db_session.query(exists().where(MatchDayModel.date == datetime.now().date().strftime("%Y-%m-%d"))).scalar():
-            match_day = MatchDayModel(date=datetime.now().date().strftime("%Y-%m-%d"))
+            match_day = MatchDayModel(date=datetime.now().date()) # .strftime("%Y-%m-%d")
             db_session.add(match_day)
             db_session.commit()
             db_session.refresh(match_day)
@@ -70,7 +70,7 @@ def save_new_matches(db_session: Session, match_json: dict, match_day: MatchDayM
     for match_image in match_json['match_images']:
         image = MatchImage(
             image_url=match_image["image"],
-            image_name=match_image["name"],
+            image_name=match_image["name"].encode('utf-8'),
             image_type=match_image["type"],
         )
         match_images.append(image)
@@ -89,7 +89,8 @@ def save_new_matches(db_session: Session, match_json: dict, match_day: MatchDayM
         home_team=match_json['home_team'],
         away_team=match_json['away_team'],
         tournament=match_json['tournament'],
-        starts_at=match_json['starts_at'],
+        starts_at=datetime.strptime(match_json['starts_at'].split("T")[0] + " " \
+            + match_json['starts_at'].split("T")[1].split("+")[0], '%Y-%m-%d %H:%M:%S'),
     )
     # Save match model
     db_session.add(match_model)
