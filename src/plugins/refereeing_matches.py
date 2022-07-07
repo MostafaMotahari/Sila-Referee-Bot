@@ -12,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from src.plugins import message_templates
 from src.sql.models import MatchModel
 from src.plugins import goal_checker
+from src.sql.session import get_db
 
 
 # Seprate session for scheduled tasks
@@ -33,7 +34,9 @@ temp_memory = {
         "type": None,
         "name": None,
         "number": 0
-    }
+    },
+    "home_team_goals": 0,
+    "away_team_goals": 0
 }
 
 schedular = BackgroundScheduler()
@@ -64,19 +67,29 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     referee = json.loads(requests.get(f'{api_url}/users/{match.referee}', headers=headers).text)
 
 
-    score_board_msg = app.send_message(
+    wellcome_match_msg = app.send_message(
         stadium_id,
-        message_templates.score_board_message_template.format(
+        message_templates.wellcome_match_message_template.format(
             home_team["name"],
             away_team["name"],
             home_team["stadium"]["name"],
             match.starts_at,
-            referee["username"]
+            referee["first_name"] + referee["last_name"]
+        )
+    )
+
+    score_board_msg = app.send_message(
+        stadium_id,
+        message_templates.score_board_message_template.format(
+            home_team["name"],
+            " ",
+            away_team["name"],
+            " "
         )
     )
 
     # Save the information of message to temp memory
-    temp_memory["score_board_id"] = score_board_msg.id
+    temp_memory["score_board_id"] = wellcome_match_msg.id
     temp_memory["stadium_id"] = stadium_id
 
     time.sleep(60)
@@ -90,11 +103,14 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
         "number": 0
     }
 
+    temp_memory["home_team"] = home_team
+    temp_memory["away_team"] = away_team
+
     os.environ["memory"] = json.dumps(temp_memory)
 
     # Start time controler
-    # schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
-    # schedular.start()
+    schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
+    schedular.start()
     
 
 # Goal detector
@@ -104,4 +120,24 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     lambda _, __, msg : True if msg.chat.id == json.loads(os.environ["memory"])["stadium_id"] else False
 ))
 def goal_detector(client: Client, message: Message):
-    message.reply("Goallllll!")
+    temp_memory = json.loads(os.environ["memory"])
+
+    # Detect the scorer
+    for player in temp_memory["home_team"]["players"]:
+        if message.from_user.username in player.values():
+            temp_memory["home_team_goals"] += 1
+            break
+
+    else:
+        temp_memory["away_team_goals"] += 1
+
+    # Edit the scoreboard
+    scoreboard = client.get_messages(temp_memory["stadium_id"], temp_memory["score_board_id"])
+    scoreboard.edit(
+        message_templates.score_board_message_template.format(
+            temp_memory["home_team"]["name"],
+            "⚽️" * temp_memory["home_team_goals"],
+            temp_memory["away_team"],
+            "⚽️" * temp_memory["away_team_goals"]
+        )
+    )
