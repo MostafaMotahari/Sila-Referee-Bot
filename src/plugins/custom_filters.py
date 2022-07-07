@@ -13,4 +13,9 @@ def goalValidator(_, __, message: Message):
 goal_validator = filters.create(goalValidator)
 
 # Stadium chat confirm
-stadium_confirm = filters.chat( json.loads(os.environ["memory"])["stadium_id"] )
+def stadiumConfirm(_, __, message: Message):
+    if message.chat.id == json.loads(os.environ["memory"])["stadium_id"]:
+        return True
+    return False
+
+stadium_confirm = filters.create(stadiumConfirm)

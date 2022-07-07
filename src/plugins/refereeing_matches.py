@@ -1,3 +1,4 @@
+from difflib import Match
 import os
 import time
 import json
@@ -5,7 +6,7 @@ import requests
 
 from pyrogram import filters
 from pyrogram.client import Client
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from decouple import config
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -29,6 +30,7 @@ app = Client(
 )
 
 temp_memory = {
+    "match_id": 0,
     "score_board_id": None,
     "picture": {
         "id": None,
@@ -75,7 +77,7 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
             away_team["name"],
             home_team["stadium"]["name"],
             match.starts_at,
-            referee["first_name"] + referee["last_name"]
+            referee["first_name"] + " " + referee["last_name"]
         )
     )
 
@@ -88,12 +90,13 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
             " "
         )
     )
+    score_board_msg.pin()
 
     # Save the information of message to temp memory
-    temp_memory["score_board_id"] = wellcome_match_msg.id
+    temp_memory["score_board_id"] = score_board_msg.id
     temp_memory["stadium_id"] = stadium_id
 
-    time.sleep(60)
+    time.sleep(20)
 
     picture_one = send_image_match(match, stadium_id, 0)
 
@@ -106,18 +109,21 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
 
     temp_memory["home_team"] = home_team
     temp_memory["away_team"] = away_team
+    temp_memory["match_id"] = match.id
 
     os.environ["memory"] = json.dumps(temp_memory)
 
     # Start time controler
-    schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
-    schedular.start()
+    # schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(match, stadium_id))
+    # schedular.start()
     
 
 # Goal detector
 @app.on_message(custom_filters.goal_validator & custom_filters.stadium_confirm)
 def goal_detector(client: Client, message: Message):
+    db_session = get_db().__next__()
     temp_memory = json.loads(os.environ["memory"])
+    match: MatchModel = db_session.query(MatchModel).filter(MatchModel.id == temp_memory["match_id"]).first()
 
     # Detect the scorer
     for player in temp_memory["home_team"]["players"]:
@@ -134,7 +140,27 @@ def goal_detector(client: Client, message: Message):
         message_templates.score_board_message_template.format(
             temp_memory["home_team"]["name"],
             "⚽️" * temp_memory["home_team_goals"],
-            temp_memory["away_team"],
+            temp_memory["away_team"]["name"],
             "⚽️" * temp_memory["away_team_goals"]
         )
     )
+
+    # Send next image confirm message
+    if temp_memory["picture"]["number"] + 1 <= len(match.match_images):
+        app.send_message(
+            message.chat.id,
+            "📲 Next picture type: {}\nLet's go!".format(
+                match.match_images[temp_memory["picture"]["number"] + 1].image_type
+            ),
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🧨 Next picture ...", callback_data="next_picture")]
+            ])
+        )
+
+    else:
+        app.send_message(
+            message.chat.id,
+            "Match Ends!"
+        )
+
+# Next picture sender
