@@ -6,7 +6,7 @@ import requests
 
 from pyrogram import filters
 from pyrogram.client import Client
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from decouple import config
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -134,6 +134,12 @@ def goal_detector(client: Client, message: Message):
     else:
         temp_memory["away_team_goals"] += 1
 
+    # Send goal message
+    message.reply(
+        "🥸 He scored a Fucking **GOAL**",
+        reply_to_message_id=message.id
+    )
+
     # Edit the scoreboard
     scoreboard = client.get_messages(temp_memory["stadium_id"], temp_memory["score_board_id"])
     scoreboard.edit(
@@ -149,13 +155,16 @@ def goal_detector(client: Client, message: Message):
     if temp_memory["picture"]["number"] + 1 <= len(match.match_images):
         app.send_message(
             message.chat.id,
-            "📲 Next picture type: {}\nLet's go!".format(
-                match.match_images[temp_memory["picture"]["number"] + 1].image_type
+            "📲 Next picture type: **{}**\n\n\nLet's go!".format(
+                match.match_images[temp_memory["picture"]["number"] + 1].image_type # upper case this
             ),
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🧨 Next picture ...", callback_data="next_picture")]
+                [InlineKeyboardButton("🧨 Next picture 🧨", callback_data="next_picture:")]
             ])
         )
+
+        # Update the data of memory
+
 
     else:
         app.send_message(
@@ -164,3 +173,6 @@ def goal_detector(client: Client, message: Message):
         )
 
 # Next picture sender
+@app.on_callback_query(filters.regex("^next_picture:"))
+def send_next_picture(client: Client, callback_query: CallbackQuery):
+    pass
