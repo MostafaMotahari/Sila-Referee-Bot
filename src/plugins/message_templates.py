@@ -1,6 +1,6 @@
 linking_message_template = """
 Hey! 👋🏻
-⚽️ You have a new match at: [ {} ]
+⚽️ You have a new match at: [ **{}** ]
 
 🏟 Stadium link:
 [ {} ]
@@ -16,7 +16,7 @@ wellcome_match_message_template = """
 
 🏟 {}
 
-⏰ {}
+⏰ **{}**
 🎤 {}
 """
 

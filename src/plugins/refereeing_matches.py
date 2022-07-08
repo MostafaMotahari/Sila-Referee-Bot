@@ -78,9 +78,10 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     referee = json.loads(requests.get(f'{api_url}/users/{match.referee}', headers=headers).text)
 
 
-    app.send_message(
+    app.send_photo(
         stadium_id,
-        message_templates.wellcome_match_message_template.format(
+        "src/static/start_match_pic.jpeg",
+        caption=message_templates.wellcome_match_message_template.format(
             home_team["name"],
             away_team["name"],
             home_team["stadium"]["name"],
@@ -177,7 +178,7 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
             app.send_message(
                 chat_id,
                 "📲 Next picture type: **{}**\n\n\nLet's go!".format(
-                    match.match_images[next_picture_number].image_type # upper case this
+                    match.match_images[next_picture_number].image_type.upper() # upper case this
                 ),
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("🧨 Next picture 🧨", callback_data="next_picture")] # Place match id in callback data later for async mode
@@ -185,9 +186,10 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
             )
 
         else:
-            app.send_message(
+            app.send_photo(
                 chat_id,
-                "Match Ends!"
+                "src/static/end_match_pic.jpeg",
+                caption="Match Ends!"
             )
 
     else:
@@ -232,8 +234,6 @@ def send_next_picture(client: Client, callback_query: CallbackQuery):
     }
 
     os.environ["memory"] = json.dumps(temp_memory)
-
-    print(next_image_type)
 
     schedular.add_job(goal_checker.goal_time_checker, "interval", seconds=1, args=(callback_query.message.chat.id, ), id="picture_timer")
     schedular.start()
