@@ -45,6 +45,13 @@ temp_memory = {
 
 schedular = BackgroundScheduler()
 
+UN_DUPLICATE = False
+
+# Check Un_duplicated Goal Filter
+def un_duplicated_goal(_, __, message):
+    if not UN_DUPLICATE:
+        return True
+    return False
 
 # Send picture function
 def send_image_match(match: MatchModel, stadium_id, number_of_picture: int):
@@ -60,7 +67,7 @@ def send_image_match(match: MatchModel, stadium_id, number_of_picture: int):
             match.match_images[number_of_picture].image_url,
         )
 
-
+# This func plays main role of refereeing the match
 def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_team: dict):
 
     os.environ["memory"] = json.dumps(temp_memory)
@@ -71,7 +78,7 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     referee = json.loads(requests.get(f'{api_url}/users/{match.referee}', headers=headers).text)
 
 
-    wellcome_match_msg = app.send_message(
+    app.send_message(
         stadium_id,
         message_templates.wellcome_match_message_template.format(
             home_team["name"],
@@ -108,7 +115,7 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
     os.environ["memory"] = json.dumps(temp_memory)
 
     # Add handlers
-    app.add_handler( MessageHandler(goal_detector, custom_filters.goal_validator & custom_filters.stadium_confirm & ~custom_filters.referee_filter(referee["user_telegram_id"])) )
+    app.add_handler( MessageHandler(goal_detector, custom_filters.goal_validator & filters.create(un_duplicated_goal) & custom_filters.stadium_confirm & ~custom_filters.referee_filter(referee["user_telegram_id"])) )
     app.add_handler( CallbackQueryHandler(send_next_picture, filters.regex("^next_picture$") & custom_filters.referee_filter(referee["user_telegram_id"])) )
 
 
@@ -117,6 +124,8 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
 def goal_detector(client: Client = None, message: Message = None, stadium_id = None, first_run: bool = False):
 
     # Disable goal decorator
+    global UN_DUPLICATE
+    UN_DUPLICATE = True
     chat_id = stadium_id
     temp_memory = json.loads(os.environ["memory"])
     temp_memory["picture"]["name"] = "khar0k0n8y"
@@ -197,6 +206,8 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
 # Next picture sender
 def send_next_picture(client: Client, callback_query: CallbackQuery):
 
+    global UN_DUPLICATE
+    UN_DUPLICATE = False
     db_session = get_db().__next__()
     temp_memory = json.loads(os.environ["memory"])
 
