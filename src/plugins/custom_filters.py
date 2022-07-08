@@ -7,13 +7,16 @@ from pyrogram.types import Message
 
 # Goal detector filters
 def goalValidator(_, __, message: Message):
-    for part_name in json.loads(os.environ["memory"])["picture"]["name"].split(" "):
-        pattern = r"(?e)(?:" + part_name + r"){e<=1}"
+    try:
+        for part_name in json.loads(os.environ["memory"])["picture"]["name"].split(" "):
+            pattern = r"(?e)(?:" + part_name + r"){e<=1}"
 
-        if regex.fullmatch(pattern, message.text):
-            return True
+            if regex.fullmatch(pattern, message.text):
+                return True
 
-    else:
+        else:
+            return False
+    except:
         return False
 
 goal_validator = filters.create(goalValidator)
