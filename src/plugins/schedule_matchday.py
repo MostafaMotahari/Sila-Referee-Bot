@@ -1,7 +1,7 @@
 """This plugin schedule matches of a matchday if it confirmed by owner."""
 
 from datetime import datetime, timedelta
-from dateutil import tz
+import time
 import json
 
 from decouple import config
@@ -29,11 +29,11 @@ executors = {
     'default': ThreadPoolExecutor(20),
 }
 job_defaults = {
-    'coalesce': False,
+    # 'coalesce': False,
     'max_instances': 3,
-    'misfire_grace_time': 15*60
+    # 'misfire_grace_time': 15*60
 }
-scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc)
+scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone="Asia/Tehran")
 
 # Scheduler
 def matchday_scheduler(client: Client, message: Message, match_day_id: int):
@@ -72,7 +72,11 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
                 print(e)
                 continue
 
-        # scheduler.add_job(schedule_referee, run_date=match.starts_at, replace_existing=True, args=(match, ))
-        schedule_referee(match, int(stadium["telegram_chat_id"]), home_team_json, away_team_json)
-        
-    # scheduler.start()
+        scheduler.add_job(schedule_referee, trigger='date', run_date=match.starts_at, args=(
+            match,
+            int(stadium["telegram_chat_id"]),
+            home_team_json,
+            away_team_json
+        ))
+    
+    scheduler.start()
