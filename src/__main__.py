@@ -1,5 +1,7 @@
 """"This files is the main file of the bot"""
 
+import os, time
+
 from pyrogram.client import Client
 from decouple import config
 
@@ -21,5 +23,7 @@ app = Client(
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
+    os.environ['TZ'] = 'Asia/Tehran'
+    time.tzset()
     test()
     app.run()
