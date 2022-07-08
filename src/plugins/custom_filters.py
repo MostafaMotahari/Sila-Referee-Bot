@@ -19,3 +19,12 @@ def stadiumConfirm(_, __, message: Message):
     return False
 
 stadium_confirm = filters.create(stadiumConfirm)
+
+# Referee filter
+def referee_filter(referee_username: str):
+    def ___(_, __, message: Message):
+        if _.referee_username == message.from_user.username:
+            return True
+        return False
+
+    return filters.create(___, referee_username=referee_username)
