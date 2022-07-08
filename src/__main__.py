@@ -23,7 +23,7 @@ app = Client(
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
-    os.environ['TZ'] = 'Asia/Tehran'
+    os.environ['TZ'] = config("TIME_ZONE")
     time.tzset()
     test()
     app.run()
