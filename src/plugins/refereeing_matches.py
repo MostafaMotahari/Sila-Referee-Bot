@@ -46,11 +46,18 @@ temp_memory = {
 
 schedular = BackgroundScheduler()
 
-UN_DUPLICATE = False
+UN_DUPLICATED_GOAL = False
+UN_DUPLICATED_CQ = False
 
-# Check Un_duplicated Goal Filter
+# Check Un Duplicated Goal Filter
 def un_duplicated_goal(_, __, message):
-    if not UN_DUPLICATE:
+    if not UN_DUPLICATED_GOAL:
+        return True
+    return False
+
+# Check Un Duplicated CQ Filter
+def un_duplicated_callback_query(_, __, message):
+    if not UN_DUPLICATED_CQ:
         return True
     return False
 
@@ -116,7 +123,7 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
 
     # Add handlers
     app.add_handler( MessageHandler(goal_detector, custom_filters.goal_validator & filters.create(un_duplicated_goal) & custom_filters.stadium_confirm & ~custom_filters.referee_filter(referee["user_telegram_id"])) )
-    app.add_handler( CallbackQueryHandler(send_next_picture, filters.regex("^next_picture$") & custom_filters.referee_filter(referee["user_telegram_id"])) )
+    app.add_handler( CallbackQueryHandler(send_next_picture, filters.regex("^next_picture$") & filters.create(un_duplicated_callback_query) & custom_filters.referee_filter(referee["user_telegram_id"])) )
 
 
 
@@ -124,8 +131,10 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
 def goal_detector(client: Client = None, message: Message = None, stadium_id = None, first_run: bool = False):
 
     # Disable goal decorator
-    global UN_DUPLICATE
-    UN_DUPLICATE = True
+    global UN_DUPLICATED_GOAL
+    UN_DUPLICATED_GOAL = True
+    global UN_DUPLICATED_CQ
+    UN_DUPLICATED_CQ = False
     chat_id = stadium_id
     temp_memory = json.loads(os.environ["memory"])
     temp_memory["picture"]["name"] = "khar0k0n8y"
@@ -211,8 +220,10 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
 # Next picture sender
 def send_next_picture(client: Client, callback_query: CallbackQuery):
 
-    global UN_DUPLICATE
-    UN_DUPLICATE = False
+    global UN_DUPLICATED_GOAL
+    UN_DUPLICATED_GOAL = False
+    global UN_DUPLICATED_CQ
+    UN_DUPLICATED_CQ = True
     db_session = get_db().__next__()
     temp_memory = json.loads(os.environ["memory"])
 
