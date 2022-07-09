@@ -40,7 +40,8 @@ temp_memory = {
         "max_time": 30
     },
     "home_team_goals": 0,
-    "away_team_goals": 0
+    "away_team_goals": 0,
+    "scorers": []
 }
 
 schedular = BackgroundScheduler()
@@ -148,6 +149,9 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
             reply_to_message_id=message.id
         )
 
+        # Save scorer
+        temp_memory["scorers"].append(f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})")
+
         # Edit the scoreboard
         scoreboard = client.get_messages(temp_memory["stadium_id"], temp_memory["score_board_id"])
         scoreboard.edit(
@@ -155,7 +159,8 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
                 temp_memory["home_team"]["name"],
                 "⚽️" * temp_memory["home_team_goals"],
                 temp_memory["away_team"]["name"],
-                "⚽️" * temp_memory["away_team_goals"]
+                "⚽️" * temp_memory["away_team_goals"],
+                "\n".join(temp_memory["scorers"])
             )
         )
 

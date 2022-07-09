@@ -22,6 +22,9 @@ wellcome_match_message_template = """
 score_board_message_template = """
 🏠 {} {}
 ✈️ {} {}
+
+⚽️ Goals:
+{}
 """
 
 notif_match_message_template = """
