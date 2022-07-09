@@ -132,3 +132,4 @@ dmypy.json
 
 # Bot session
 *.session
+*.session-journal
