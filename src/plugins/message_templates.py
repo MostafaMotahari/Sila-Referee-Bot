@@ -11,8 +11,7 @@ Go and fuck the the opponent 🔥
 """
 
 wellcome_match_message_template = """
-🏠 {}
-✈️ {}
+{} ⚔️ {}
 
 🏟 {}
 

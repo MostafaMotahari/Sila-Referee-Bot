@@ -68,15 +68,12 @@ def send_image_match(match: MatchModel, stadium_id, number_of_picture: int):
         )
 
 # This func plays main role of refereeing the match
-def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_team: dict):
+def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_team: dict, referee: dict):
 
     os.environ["memory"] = json.dumps(temp_memory)
     
     app.start()
     # Send scoreboard
-    headers = {'Authorization': f'Token {api_token}'}
-    referee = json.loads(requests.get(f'{api_url}/users/{match.referee}', headers=headers).text)
-
 
     app.send_photo(
         stadium_id,

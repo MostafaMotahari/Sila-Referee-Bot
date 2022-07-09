@@ -56,6 +56,7 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
 
         home_team_json = json.loads(requests.get(f'{api_url}/teams/{match.home_team}', headers=headers).text)
         away_team_json = json.loads(requests.get(f'{api_url}/teams/{match.away_team}', headers=headers).text)
+        referee = json.loads(requests.get(f'{api_url}/users/{match.referee}', headers=headers).text)
 
         stadium = home_team_json["stadium"]
         stadium_link = client.get_chat(int(stadium["telegram_chat_id"])).invite_link
@@ -72,11 +73,24 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
                 print(e)
                 continue
 
+        # Send link to referee
+        client.send_message(
+            chat_id = referee["user_telegram_id"],
+            text = message_templates.linking_message_template.format( match.starts_at, stadium_link ),
+        )
+
+        # Send link to away team stadium
+        client.send_message(
+            chat_id = int(away_team_json["stadium"]["telegram_chat_id"]),
+            
+        )
+
         scheduler.add_job(schedule_referee, trigger='date', run_date=match.starts_at, args=(
             match,
             int(stadium["telegram_chat_id"]),
             home_team_json,
-            away_team_json
+            away_team_json,
+            referee
         ))
     
     scheduler.start()
