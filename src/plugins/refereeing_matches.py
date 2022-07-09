@@ -94,6 +94,7 @@ def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_t
             home_team["name"],
             " ",
             away_team["name"],
+            " ",
             " "
         )
     )
