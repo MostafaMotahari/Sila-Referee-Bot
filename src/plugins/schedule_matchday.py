@@ -83,7 +83,7 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
         client.send_photo(
             int(away_team_json["stadium"]["telegram_chat_id"]),
             "src/static/notif_match_pic.jpeg",
-            caption=message_templates.notif_match_message_template(
+            caption=message_templates.notif_match_message_template.format(
                 home_team_json["name"],
                 away_team_json["name"],
                 match.starts_at,
