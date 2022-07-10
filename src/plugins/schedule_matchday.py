@@ -93,8 +93,8 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
                 )
             )
         
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
         scheduler.add_job(schedule_referee, trigger='date', run_date=match.starts_at, args=(
             match,
