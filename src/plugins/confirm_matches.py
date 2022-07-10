@@ -12,10 +12,10 @@ from src.plugins.schedule_matchday import matchday_scheduler
 # Load static variables
 owner_id = config("OWNER_ID")
 
-@Client.on_message(filters.regex("^/get_matches$") & filters.user("TheAlternativeMousiol") & filters.private)
+@Client.on_message(filters.regex("^/get_matches$") & filters.user(config("OWNER_ID")) & filters.private)
 def get_matches_from_website(client: Client, message: Message):
     msg = client.send_message(
-        "TheAlternativeMousiol",
+        config("OWNER_ID"),
         "Checking for new matches..."
     )
     get_matches.check_matches_available(msg)

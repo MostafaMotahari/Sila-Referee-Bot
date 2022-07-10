@@ -40,3 +40,10 @@ notif_match_message_template = """
 
 🔴 **Note: Remember to join to the stadium on time or you might miss the game!** 🔴
 """
+
+scheduled_match_message_template = """
+
+- {} VS {}
+Referee: {}
+Time: {}
+"""

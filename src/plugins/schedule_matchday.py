@@ -42,6 +42,7 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
 
     db_session = get_db().__next__()
     match_day: MatchDayModel = db_session.query(MatchDayModel).filter(MatchDayModel.id == match_day_id).first()
+    scheduled_matches_text = "This matches has been scheduled for today!\n\n\n"
 
     # Schedule send stadium link to players
     for match in match_day.match_objects:
@@ -103,5 +104,12 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
             away_team_json,
             referee
         ))
-    
+
+        scheduled_matches_text += message_templates.scheduled_match_message_template.format(
+            home_team_json["name"], away_team_json["name"],
+            "@" + referee["user_telegram_id"],
+            match.start_at
+        )
+
     scheduler.start()
+    client.send_message(config("OWNER_ID"), scheduled_matches_text)
