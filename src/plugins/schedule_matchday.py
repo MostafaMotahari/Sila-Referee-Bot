@@ -80,17 +80,21 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
         )
 
         # Send link to away team stadium
-        client.send_photo(
-            int(away_team_json["stadium"]["telegram_chat_id"]),
-            "src/static/notif_match_pic.jpeg",
-            caption=message_templates.notif_match_message_template.format(
-                home_team_json["name"],
-                away_team_json["name"],
-                match.starts_at,
-                "@" + referee["user_telegram_id"],
-                stadium_link,
+        try:
+            client.send_photo(
+                int(away_team_json["stadium"]["telegram_chat_id"]),
+                "src/static/notif_match_pic.jpeg",
+                caption=message_templates.notif_match_message_template.format(
+                    home_team_json["name"],
+                    away_team_json["name"],
+                    match.starts_at,
+                    "@" + referee["user_telegram_id"],
+                    stadium_link,
+                )
             )
-        )
+        
+        except:
+            pass
 
         scheduler.add_job(schedule_referee, trigger='date', run_date=match.starts_at, args=(
             match,
