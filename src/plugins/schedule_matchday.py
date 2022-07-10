@@ -97,7 +97,7 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
             print(e)
 
         scheduler.add_job(schedule_referee, trigger='date', run_date=match.starts_at, args=(
-            match,
+            match.id,
             int(stadium["telegram_chat_id"]),
             home_team_json,
             away_team_json,

@@ -76,10 +76,11 @@ def send_image_match(match: MatchModel, stadium_id, number_of_picture: int):
         )
 
 # This func plays main role of refereeing the match
-def schedule_referee(match: MatchModel, stadium_id: str, home_team: dict, away_team: dict, referee: dict):
+def schedule_referee(match_id, stadium_id: str, home_team: dict, away_team: dict, referee: dict):
 
     os.environ["memory"] = json.dumps(temp_memory)
-    
+    db_session = get_db().__next__()
+    match: MatchModel = db_session.query(MatchModel).filter(MatchModel.id == match_id).first()
     app.start()
     # Send scoreboard
 
