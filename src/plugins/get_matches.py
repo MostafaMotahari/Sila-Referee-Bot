@@ -39,7 +39,7 @@ def check_matches_available(message: Message):
         matches = json.loads(response.text)
 
         if not db_session.query(exists().where(MatchDayModel.date == datetime.now().date().strftime("%Y-%m-%d"))).scalar():
-            match_day = MatchDayModel(date=datetime.now().date()) # .strftime("%Y-%m-%d")
+            match_day = MatchDayModel(date=datetime.now().date().strftime("%Y-%m-%d"))
             db_session.add(match_day)
             db_session.commit()
             db_session.refresh(match_day)
