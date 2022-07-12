@@ -243,7 +243,7 @@ def send_next_picture(client: Client, callback_query: CallbackQuery):
     temp_memory["picture"] = {
         "id": sent_pic.id,
         "type": next_image_type,
-        "name": match.match_images[next_picture_number].image_name.decode('utf-8'),
+        "name": match.match_images[next_picture_number].image_name,
         "number": next_picture_number,
         "max_time": 30 if next_image_type == "speed" else 45 if next_image_type == "info" else 60
     }
