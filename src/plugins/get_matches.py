@@ -70,7 +70,7 @@ def save_new_matches(db_session: Session, match_json: dict, match_day: MatchDayM
     for match_image in match_json['match_images']:
         image = MatchImage(
             image_url=match_image["image"],
-            image_name=match_image["name"].encode('utf-8'),
+            image_name=match_image["name"],
             image_type=match_image["type"],
         )
         match_images.append(image)
