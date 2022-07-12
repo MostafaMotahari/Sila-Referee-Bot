@@ -26,8 +26,8 @@ class MatchImage(Base):
     __tablename__ = "match_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    image_url = Column(String, unique=True, index=True)
-    image_name = Column(String, unique=True, index=True)
+    image_url = Column(String, index=True)
+    image_name = Column(String, index=True)
     image_type = Column(String)
     match_id = Column(Integer, ForeignKey("matches.id", ondelete='CASCADE'))
 
