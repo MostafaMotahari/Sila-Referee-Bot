@@ -75,10 +75,13 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
                 continue
 
         # Send link to referee
-        client.send_message(
-            chat_id = referee["user_telegram_id"],
-            text = message_templates.linking_message_template.format( match.starts_at, stadium_link ),
-        )
+        try:
+            client.send_message(
+                chat_id = referee["user_telegram_id"],
+                text = message_templates.linking_message_template.format( match.starts_at, stadium_link ),
+            )
+        except Exception as e:
+            print(e)
 
         # Send link to away team stadium
         try:
