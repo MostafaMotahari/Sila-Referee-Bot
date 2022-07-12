@@ -25,5 +25,8 @@ if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     os.environ['TZ'] = 'Asia/Tehran'
     time.tzset()
-    test()
+    try:
+        test()
+    except:
+        pass
     app.run()
