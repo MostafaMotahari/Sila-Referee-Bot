@@ -214,6 +214,8 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
                 ])
             )
 
+        app.stop()
+
     # Update data in memory
     os.environ["memory"] = json.dumps(temp_memory)
 
