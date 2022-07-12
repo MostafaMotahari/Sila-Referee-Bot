@@ -49,6 +49,8 @@ schedular = BackgroundScheduler()
 UN_DUPLICATED_GOAL = False
 UN_DUPLICATED_CQ = False
 
+app.start()
+
 # Check Un Duplicated Goal Filter
 def un_duplicated_goal(_, __, message):
     if not UN_DUPLICATED_GOAL:
@@ -81,7 +83,7 @@ def schedule_referee(match_id, stadium_id: str, home_team: dict, away_team: dict
     os.environ["memory"] = json.dumps(temp_memory)
     db_session = get_db().__next__()
     match: MatchModel = db_session.query(MatchModel).filter(MatchModel.id == match_id).first()
-    app.start()
+    # app.start()
     # Send scoreboard
 
     app.send_photo(
@@ -204,7 +206,7 @@ def goal_detector(client: Client = None, message: Message = None, stadium_id = N
                 "src/static/end_match_pic.jpeg",
                 caption="Match Ends!"
             )
-            app.stop()
+            # app.stop()
 
     else:
         app.send_message(
