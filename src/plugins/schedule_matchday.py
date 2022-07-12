@@ -108,7 +108,7 @@ def matchday_scheduler(client: Client, message: Message, match_day_id: int):
         scheduled_matches_text += message_templates.scheduled_match_message_template.format(
             home_team_json["name"], away_team_json["name"],
             "@" + referee["user_telegram_id"],
-            match.start_at
+            match.starts_at
         )
 
     scheduler.start()
