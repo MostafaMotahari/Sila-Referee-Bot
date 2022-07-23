@@ -19,6 +19,18 @@ This bot uses restful of [Sila Website](https://github.com/MostafaMotahari/Sila-
 Therefore, the work of your collection will proceed harmoniously and without confusion.
 
 
+## Environment Variables
+
+To run this project, you will need to add the following environment variables to your .env file
+
+`API_HASH` & `API_ID` & `BOT_TOKEN` For telegram services.
+
+`OWNER_ID` For numeric account ID of the owner.
+
+`API_URL` & `API_TOKEN` For your Sila Website API.
+
+`DB_URL` For your Postgres SQL database.
+
 ## Run Locally
 
 Clone the project
