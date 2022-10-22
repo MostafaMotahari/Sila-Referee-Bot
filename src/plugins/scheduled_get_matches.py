@@ -15,7 +15,6 @@ app = Client(
 )
 
 def get_matches():
-    print("madareto")
     app.start()
     msg = app.send_message(
         "TheAlternativeMousiol",
